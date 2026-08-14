@@ -403,6 +403,8 @@
 -r:"Library/PackageCache/com.unity.nuget.newtonsoft-json@4dfd81071c64/Runtime/Newtonsoft.Json.dll"
 -r:"Library/PackageCache/com.unity.testtools.codecoverage@19a841221620/lib/ReportGenerator/ReportGeneratorMerged.dll"
 -r:"Library/PackageCache/com.unity.visualscripting@8bed5ad90189/Runtime/VisualScripting.Flow/Dependencies/NCalc/Unity.VisualScripting.Antlr3.Runtime.dll"
+-r:"Library/Bee/artifacts/1900b0aE.dag/PlayFab.ref.dll"
+-r:"Library/Bee/artifacts/1900b0aE.dag/PlayFabSDKEditor.ref.dll"
 -r:"Library/Bee/artifacts/1900b0aE.dag/Unity.EditorCoroutines.Editor.ref.dll"
 -r:"Library/Bee/artifacts/1900b0aE.dag/Unity.InputSystem.ForUI.ref.dll"
 -r:"Library/Bee/artifacts/1900b0aE.dag/Unity.InputSystem.ref.dll"
@@ -444,9 +446,14 @@
 "Assets/WALTER/SCRIPT/CamaraController.cs"
 "Assets/WALTER/SCRIPT/Collectable.cs"
 "Assets/WALTER/SCRIPT/CollectablesSpawn.cs"
+"Assets/WALTER/SCRIPT/ExamConfiguration.cs"
+"Assets/WALTER/SCRIPT/ExamServicesBootstrap.cs"
 "Assets/WALTER/SCRIPT/GameManager.cs"
 "Assets/WALTER/SCRIPT/InputManager.cs"
 "Assets/WALTER/SCRIPT/MovimientoPlayer.cs"
+"Assets/WALTER/SCRIPT/PlayFabLeaderboardManager.cs"
+"Assets/WALTER/SCRIPT/SimpleJSON.cs"
+"Assets/WALTER/SCRIPT/SimpleJSONUnity.cs"
 "Assets/WALTER/SCRIPT/WeatherManager.cs"
 -langversion:9.0
 /deterministic

@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class MovimientoPlayer : MonoBehaviour
@@ -7,7 +6,7 @@ public class MovimientoPlayer : MonoBehaviour
     [SerializeField] private float runSpeed;
 
 
-    Rigidbody rb;
+    private Rigidbody rb;
 
     private void Awake()
     {
@@ -16,7 +15,16 @@ public class MovimientoPlayer : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rb.linearVelocity = transform.localRotation *new Vector3 (InputManager.Instance.Movement().x,0,InputManager.Instance.Movement ().y)*ActualSpeed();
+        if (InputManager.Instance == null)
+        {
+            return;
+        }
+
+        Vector2 input = InputManager.Instance.Movement();
+        Vector3 horizontalVelocity = transform.TransformDirection(new Vector3(input.x, 0f, input.y));
+        horizontalVelocity *= ActualSpeed();
+
+        rb.linearVelocity = new Vector3(horizontalVelocity.x, rb.linearVelocity.y, horizontalVelocity.z);
     }
 
     public float ActualSpeed()

@@ -1,26 +1,40 @@
-using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
-    public static InputManager Instance;
+    public static InputManager Instance { get; private set; }
 
-    PlayerControls inputs;
+    private PlayerControls inputs;
 
-    private void Start()
+    private void Awake()
     {
-        inputs = new PlayerControls();
-
-        inputs.Enable();
-
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
+            Destroy(this);
+            return;
         }
-        else
+
+        Instance = this;
+        inputs = new PlayerControls();
+    }
+
+    private void OnEnable()
+    {
+        inputs?.Enable();
+    }
+
+    private void OnDisable()
+    {
+        inputs?.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        inputs?.Dispose();
+
+        if (Instance == this)
         {
-           Destroy(this.gameObject);
+            Instance = null;
         }
     }
     public Vector2 Movement()

@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CamaraController camara;
 
     private int score;
+    private bool gameEnded;
+    private Rigidbody playerRigidbody;
     private readonly WaitForSeconds oneSecond = new WaitForSeconds(1f); 
 
     private void Awake()
@@ -30,6 +32,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        playerRigidbody = player != null ? player.GetComponent<Rigidbody>() : null;
         endMessage.SetActive(false);
         UpdateScoreText();
         StartCoroutine(TimerIE());
@@ -37,6 +40,11 @@ public class GameManager : MonoBehaviour
 
     public void AddScore(int points)
     {
+        if (gameEnded)
+        {
+            return;
+        }
+
         score += points;
         UpdateScoreText(); 
     }
@@ -61,10 +69,26 @@ public class GameManager : MonoBehaviour
 
     private void EndGame()
     {
+        gameEnded = true;
         endMessage.SetActive(true);
 
-        player.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        player.enabled = false;
-        camara.enabled = false;
+        if (playerRigidbody != null)
+        {
+            playerRigidbody.linearVelocity = Vector3.zero;
+        }
+
+        if (player != null)
+        {
+            player.enabled = false;
+        }
+
+        if (camara != null)
+        {
+            camara.enabled = false;
+        }
+
+        CollectablesSpawn.Instance?.StopSpawning();
+        PlayFabLeaderboardManager.Instance?.SubmitScore(score);
+        PlayFabLeaderboardManager.Instance?.ShowLeaderboard();
     }
 }

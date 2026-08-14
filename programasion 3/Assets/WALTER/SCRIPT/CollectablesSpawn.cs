@@ -1,13 +1,13 @@
 using System.Collections;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 
 public class CollectablesSpawn : MonoBehaviour
 {
-    public static CollectablesSpawn Instance;
+    public static CollectablesSpawn Instance { get; private set; }
 
     [SerializeField] private CollectableObject[] collectableObjects;
 
@@ -37,6 +37,13 @@ public class CollectablesSpawn : MonoBehaviour
 
     private void Start()
     {
+        if (collectableObjects == null || collectableObjects.Length == 0)
+        {
+            Debug.LogError("CollectablesSpawn necesita al menos un tipo de coleccionable.", this);
+            enabled = false;
+            return;
+        }
+
         spawnWait = new WaitForSeconds(spawnRate);
 
         Transform spawnsParent = new GameObject("Spawns").transform;
@@ -79,20 +86,7 @@ public class CollectablesSpawn : MonoBehaviour
         {
             if (spawnPoints.Count > 0) 
             {
-                int randomObject = Random.Range(0, 100);
-                int queueIndex;
-                if (randomObject < 60)
-                {
-                    queueIndex = 0;
-                }
-                else if (randomObject < 90)
-                {
-                    queueIndex = 1;
-                }
-                else
-                {
-                    queueIndex = 2;
-                }
+                int queueIndex = GetRandomCollectableIndex();
 
                 if (collectableObjects[queueIndex].pool.Count > 0) 
                 {
@@ -113,6 +107,48 @@ public class CollectablesSpawn : MonoBehaviour
         spawnObjIE = null;
     }
 
+    private int GetRandomCollectableIndex()
+    {
+        float totalWeight = 0f;
+        for (int i = 0; i < collectableObjects.Length; i++)
+        {
+            if (collectableObjects[i].pool.Count > 0)
+            {
+                totalWeight += Mathf.Max(0f, collectableObjects[i].spawnRate);
+            }
+        }
+
+        if (totalWeight <= 0f)
+        {
+            for (int i = 0; i < collectableObjects.Length; i++)
+            {
+                if (collectableObjects[i].pool.Count > 0)
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
+
+        float selection = Random.value * totalWeight;
+        for (int i = 0; i < collectableObjects.Length; i++)
+        {
+            if (collectableObjects[i].pool.Count == 0)
+            {
+                continue;
+            }
+
+            selection -= Mathf.Max(0f, collectableObjects[i].spawnRate);
+            if (selection <= 0f)
+            {
+                return i;
+            }
+        }
+
+        return collectableObjects.Length - 1;
+    }
+
     private GameObject GetNextObj(int queue)
     {
         GameObject nextObj = collectableObjects[queue].pool.Dequeue();
@@ -128,6 +164,11 @@ public class CollectablesSpawn : MonoBehaviour
 
     public void CollectObj(GameObject obj, int poolIndex)
     {
+        if (obj == null || poolIndex < 0 || poolIndex >= collectableObjects.Length)
+        {
+            return;
+        }
+
         Transform objSpawnPoint = obj.transform.parent;
 
         usedSpawnPoints.Remove(objSpawnPoint);
@@ -142,6 +183,15 @@ public class CollectablesSpawn : MonoBehaviour
         if (spawnObjIE == null)
         {
             spawnObjIE = StartCoroutine(SpawnObjects());
+        }
+    }
+
+    public void StopSpawning()
+    {
+        if (spawnObjIE != null)
+        {
+            StopCoroutine(spawnObjIE);
+            spawnObjIE = null;
         }
     }
 }
