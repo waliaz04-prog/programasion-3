@@ -2,21 +2,22 @@ using System.Collections;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 public class WeatherManager : MonoBehaviour
 {
     private readonly City[] cities =
     {
-        new City("Ciudad de México", 19.4326f, -99.1332f),
-        new City("Monterrey", 25.6866f, -100.3161f),
-        new City("Guadalajara", 20.6597f, -103.3496f),
-        new City("Cancún", 21.1619f, -86.8515f),
-        new City("Londres", 51.5074f, -0.1278f),
-        new City("Tokio", 35.6762f, 139.6503f),
-        new City("Nueva York", 40.7128f, -74.0060f),
-        new City("El Cairo", 30.0444f, 31.2357f),
-        new City("Sídney", -33.8688f, 151.2093f),
-        new City("París", 48.8566f, 2.3522f)
+        new City("Reikiavik", 64.1466f, -21.9426f),
+        new City("Vancouver", 49.2827f, -123.1207f),
+        new City("Nairobi", -1.2921f, 36.8219f),
+        new City("Ciudad del Cabo", -33.9249f, 18.4241f),
+        new City("Buenos Aires", -34.6037f, -58.3816f),
+        new City("Santiago de Chile", -33.4489f, -70.6693f),
+        new City("Singapur", 1.3521f, 103.8198f),
+        new City("Mumbai", 19.0760f, 72.8777f),
+        new City("Seúl", 37.5665f, 126.9780f),
+        new City("Oslo", 59.9139f, 10.7522f)
     };
 
     private Camera mainCamera;
@@ -26,6 +27,27 @@ public class WeatherManager : MonoBehaviour
 
     private void Start()
     {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        ConfigureForScene(SceneManager.GetActiveScene());
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        ConfigureForScene(scene);
+    }
+
+    private void ConfigureForScene(Scene scene)
+    {
+        StopAllCoroutines();
+        mainCamera = null;
+        directionalLight = null;
+
+        if (scene.name != ExamConfiguration.GameSceneName)
+        {
+            weatherStatus = "El clima se activará al comenzar la partida";
+            return;
+        }
+
         mainCamera = Camera.main;
         Light[] lights = FindObjectsByType<Light>();
         foreach (Light sceneLight in lights)
@@ -39,7 +61,7 @@ public class WeatherManager : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(ExamConfiguration.OpenWeatherApiKey))
         {
-            weatherStatus = "Falta OpenWeatherApiKey en ExamConfiguration.cs";
+            weatherStatus = "Falta Assets/Resources/OpenWeatherApiKey.txt";
             Debug.LogError(weatherStatus, this);
             return;
         }
@@ -131,47 +153,57 @@ public class WeatherManager : MonoBehaviour
         if (weatherId >= 200 && weatherId < 300)
         {
             return new WeatherVisuals(
-                new Color(0.08f, 0.09f, 0.18f), new Color(0.22f, 0.24f, 0.35f),
-                new Color(0.45f, 0.5f, 0.65f), new Color(0.6f, 0.65f, 0.9f), 0.35f, true, 0.035f);
+                new Color(0.12f, 0.03f, 0.2f), new Color(0.2f, 0.08f, 0.28f),
+                new Color(0.3f, 0.16f, 0.42f), new Color(0.72f, 0.55f, 1f), 0.42f, true, 0.04f);
         }
 
         if (weatherId >= 300 && weatherId < 600)
         {
             return new WeatherVisuals(
-                new Color(0.18f, 0.24f, 0.32f), new Color(0.3f, 0.36f, 0.45f),
-                new Color(0.48f, 0.55f, 0.62f), new Color(0.7f, 0.78f, 0.9f), 0.5f, true, 0.025f);
+                new Color(0.02f, 0.2f, 0.25f), new Color(0.08f, 0.28f, 0.3f),
+                new Color(0.12f, 0.4f, 0.42f), new Color(0.55f, 0.9f, 0.88f), 0.58f, true, 0.028f);
         }
 
         if (weatherId >= 600 && weatherId < 700)
         {
             return new WeatherVisuals(
-                new Color(0.72f, 0.82f, 0.92f), new Color(0.78f, 0.86f, 0.92f),
-                new Color(0.82f, 0.88f, 0.95f), new Color(0.82f, 0.9f, 1f), 0.9f, true, 0.015f);
+                new Color(0.48f, 0.62f, 0.86f), new Color(0.62f, 0.7f, 0.9f),
+                new Color(0.72f, 0.8f, 1f), new Color(0.72f, 0.84f, 1f), 1.05f, true, 0.018f);
         }
 
         if (weatherId >= 700 && weatherId < 800)
         {
             return new WeatherVisuals(
-                new Color(0.45f, 0.47f, 0.5f), new Color(0.55f, 0.56f, 0.58f),
-                new Color(0.55f, 0.57f, 0.6f), Color.white, 0.55f, true, 0.045f);
+                new Color(0.34f, 0.27f, 0.18f), new Color(0.4f, 0.34f, 0.24f),
+                new Color(0.55f, 0.47f, 0.34f), new Color(1f, 0.78f, 0.5f), 0.62f, true, 0.05f);
         }
 
         if (weatherId == 800)
         {
             Color warmLight = temperature >= 28f ? new Color(1f, 0.82f, 0.58f) : new Color(1f, 0.95f, 0.84f);
             return new WeatherVisuals(
-                new Color(0.28f, 0.62f, 0.92f), new Color(0.45f, 0.62f, 0.78f),
-                new Color(0.65f, 0.75f, 0.85f), warmLight, 1.2f, false, 0f);
+                new Color(0.18f, 0.55f, 0.78f), new Color(0.38f, 0.58f, 0.68f),
+                new Color(0.62f, 0.72f, 0.78f), warmLight, 1.28f, false, 0f);
         }
 
         return new WeatherVisuals(
-            new Color(0.42f, 0.52f, 0.64f), new Color(0.48f, 0.53f, 0.6f),
-            new Color(0.58f, 0.63f, 0.7f), new Color(0.85f, 0.88f, 0.92f), 0.72f, true, 0.008f);
+            new Color(0.26f, 0.34f, 0.48f), new Color(0.34f, 0.4f, 0.52f),
+            new Color(0.42f, 0.48f, 0.58f), new Color(0.78f, 0.84f, 0.95f), 0.76f, true, 0.01f);
     }
 
     private void OnGUI()
     {
+        if (SceneManager.GetActiveScene().name != ExamConfiguration.GameSceneName)
+        {
+            return;
+        }
+
         GUI.Box(new Rect(15f, 15f, Mathf.Min(420f, Screen.width - 220f), 38f), "Clima: " + weatherStatus);
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     private readonly struct City

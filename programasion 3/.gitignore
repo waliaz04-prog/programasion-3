@@ -104,3 +104,11 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Credencial local de OpenWeather usada para generar la build del examen.
+# No debe publicarse en el repositorio.
+/Assets/Resources/OpenWeatherApiKey.txt
+/Assets/Resources/OpenWeatherApiKey.txt.meta
+
+# Copias locales creadas antes de reconstruir escenas.
+/ProjectBackups/

@@ -4,17 +4,22 @@ using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayFabLeaderboardManager : MonoBehaviour
 {
     public static PlayFabLeaderboardManager Instance { get; private set; }
+    public bool IsLoggedIn => loggedIn;
+    public bool IsGuestSession => guestSession;
+    public string CurrentPlayFabId => playFabId;
+    public bool ShouldShowLeaderboard => showLeaderboard;
 
     private readonly List<PlayerLeaderboardEntry> leaderboard = new List<PlayerLeaderboardEntry>();
     private PlayerLeaderboardEntry currentPlayer;
     private bool loggedIn;
+    private bool guestSession;
     private bool showLeaderboard;
     private bool loading;
-    private int pendingScore = -1;
     private string status = "Conectando con PlayFab...";
     private string playFabId;
 
@@ -50,48 +55,34 @@ public class PlayFabLeaderboardManager : MonoBehaviour
             return;
         }
 
-        Login();
+        status = "Esperando inicio de sesión";
     }
 
     private void Update()
     {
-        if (Keyboard.current?.lKey.wasPressedThisFrame == true)
+        if (FindAnyObjectByType<MenuInspectorController>() != null)
+        {
+            return;
+        }
+
+        if (loggedIn
+            && SceneManager.GetActiveScene().name == ExamConfiguration.MenuSceneName
+            && Keyboard.current?.lKey.wasPressedThisFrame == true)
         {
             ToggleLeaderboard();
         }
     }
 
-    private void Login()
-    {
-        loading = true;
-        string customId = SystemInfo.deviceUniqueIdentifier;
-        if (string.IsNullOrWhiteSpace(customId) || customId == SystemInfo.unsupportedIdentifier)
-        {
-            customId = SystemInfo.deviceName + "-" + Application.companyName;
-        }
-
-        PlayFabClientAPI.LoginWithCustomID(
-            new LoginWithCustomIDRequest
-            {
-                CustomId = customId,
-                CreateAccount = true,
-                InfoRequestParameters = new GetPlayerCombinedInfoRequestParams
-                {
-                    GetPlayerProfile = true
-                }
-            },
-            OnLoginSuccess,
-            OnPlayFabError);
-    }
-
-    private void OnLoginSuccess(LoginResult result)
+    public void SetAuthenticatedPlayer(string authenticatedPlayFabId, string displayName)
     {
         loggedIn = true;
+        guestSession = false;
         loading = false;
-        playFabId = result.PlayFabId;
-        status = "PlayFab conectado";
+        playFabId = authenticatedPlayFabId;
+        status = string.IsNullOrWhiteSpace(displayName)
+            ? "PlayFab conectado"
+            : "Sesión iniciada: " + displayName;
 
-        string displayName = result.InfoResultPayload?.PlayerProfile?.DisplayName;
         if (string.IsNullOrWhiteSpace(displayName))
         {
             string suffix = playFabId.Length > 4 ? playFabId.Substring(playFabId.Length - 4) : playFabId;
@@ -105,20 +96,21 @@ public class PlayFabLeaderboardManager : MonoBehaviour
             FetchLeaderboard();
         }
 
-        if (pendingScore >= 0)
-        {
-            int score = pendingScore;
-            pendingScore = -1;
-            SubmitScore(score);
-        }
     }
 
     public void SubmitScore(int score)
     {
+        if (guestSession)
+        {
+            status = "Modo invitado: el puntaje no se guardó";
+            Debug.Log(status, this);
+            return;
+        }
+
         if (!loggedIn)
         {
-            pendingScore = score;
-            status = "El puntaje se guardará al conectar con PlayFab";
+            status = "Sin sesión: el puntaje no se guardó";
+            Debug.Log(status, this);
             return;
         }
 
@@ -164,6 +156,16 @@ public class PlayFabLeaderboardManager : MonoBehaviour
             OnPlayFabError);
     }
 
+    public void StartGuestSession()
+    {
+        guestSession = true;
+        loggedIn = false;
+        showLeaderboard = false;
+        loading = false;
+        playFabId = string.Empty;
+        status = "Jugando como invitado: los resultados no se guardarán";
+    }
+
     public void ShowLeaderboard()
     {
         showLeaderboard = true;
@@ -179,9 +181,15 @@ public class PlayFabLeaderboardManager : MonoBehaviour
         }
     }
 
+    // Se oculta al salir de Menu para que las puntuaciones no invadan la partida.
+    public void HideLeaderboard()
+    {
+        showLeaderboard = false;
+    }
+
     private void FetchLeaderboard()
     {
-        if (!loggedIn)
+        if (!loggedIn || SceneManager.GetActiveScene().name != ExamConfiguration.MenuSceneName)
         {
             return;
         }
@@ -235,6 +243,16 @@ public class PlayFabLeaderboardManager : MonoBehaviour
 
     private void OnGUI()
     {
+        if (FindAnyObjectByType<MenuInspectorController>() != null)
+        {
+            return;
+        }
+
+        if (!loggedIn)
+        {
+            return;
+        }
+
         EnsureStyles();
 
         if (GUI.Button(new Rect(Screen.width - 190f, 15f, 175f, 38f), "Leaderboard [L]"))

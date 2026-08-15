@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
@@ -88,7 +89,32 @@ public class GameManager : MonoBehaviour
         }
 
         CollectablesSpawn.Instance?.StopSpawning();
-        PlayFabLeaderboardManager.Instance?.SubmitScore(score);
-        PlayFabLeaderboardManager.Instance?.ShowLeaderboard();
+        PlayFabLeaderboardManager leaderboardManager = PlayFabLeaderboardManager.Instance;
+        bool scoreWillBeSaved = leaderboardManager != null && leaderboardManager.IsLoggedIn;
+        if (scoreWillBeSaved)
+        {
+            leaderboardManager.SubmitScore(score);
+            leaderboardManager.ShowLeaderboard();
+        }
+        else
+        {
+            leaderboardManager?.SubmitScore(score);
+        }
+
+        TMP_Text endText = endMessage.GetComponentInChildren<TMP_Text>(true);
+        if (endText != null)
+        {
+            endText.text = scoreWillBeSaved
+                ? $"Partida terminada\nPuntos: {score}\nGuardando récord en PlayFab..."
+                : $"Partida terminada\nPuntos: {score}\nModo invitado: resultado no guardado";
+        }
+
+        StartCoroutine(ReturnToMenuIE());
+    }
+
+    private IEnumerator ReturnToMenuIE()
+    {
+        yield return new WaitForSecondsRealtime(2f);
+        SceneManager.LoadScene(ExamConfiguration.MenuSceneName);
     }
 }

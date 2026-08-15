@@ -1,0 +1,7 @@
+CONFIGURACION LOCAL DE OPENWEATHER
+
+1. Crea en esta carpeta un archivo llamado OpenWeatherApiKey.txt.
+2. Pega solamente tu API key de OpenWeather en ese archivo.
+3. No agregues OpenWeatherApiKey.txt al repositorio; .gitignore lo excluye.
+
+La build local de Unity incluye el archivo y WeatherManager lo carga al iniciar.
